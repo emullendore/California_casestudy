@@ -1,4 +1,9 @@
 /* 575 boilerplate style.css */
+.map{
+  stroke: white;
+  stroke-width: 1px;
+}
+
 .gratLines {
     fill: none;
     stroke: green;
@@ -12,11 +17,7 @@
     margin: 80px 5px 0px 10px;
 }
 
-.chartTitle{
-    font-family:monospace;;
-    font-size: 1.2em;
-    font-weight: bold;
-}
+
 
 .chartBackground{
   fill: silver

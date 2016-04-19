@@ -1,7 +1,8 @@
 (function(){
 
-keyArray=["coverage1314","pbe1314","coverage1516","pbe1516"];
-var expressed=keyArray[1];
+//keyArray=["coverage1314","pbe1314","coverage1516","pbe1516"];
+keyArray=["measles10","measles11","measles12","measles13","measles14","measles15"]
+var expressed=keyArray[4];
 var objectColors={
       coverage1314:['#ca0020','#f4a582','#92c5de','#0571b0'],
       pbe1314:[ '#ca0020','#f4a582','#92c5de','#0571b0'],
@@ -9,8 +10,8 @@ var objectColors={
       pbe1516:[ '#ca0020','#f4a582','#92c5de','#0571b0']
 }
 
-var chartWidth = 720,
-    chartHeight = 697.5,
+var chartWidth = 420,
+    chartHeight = 397.5,
     leftPadding=29,//more room for scale
     rightPadding=20,
     topBottomPadding=20,
@@ -40,14 +41,13 @@ function setMap(){
         .projection(projection);
 
     var q=d3_queue.queue();
-        q.defer(d3.csv, "data/cali_coverage.csv")//csv data
-      //  q.defer(d3.csv, "data/cali_measles.csv") //do I load two diff sets for two diff data
+      //  q.defer(d3.csv, "data/cali_coverage.csv")//csv data
+        q.defer(d3.csv, "data/cali_measles.csv") //do I load two diff sets for two diff data
       //representations?
         q.defer(d3.json, "data/Californ2.topojson")//spatial data
         q.await(callback);
 
     function callback(error, csvData, california){
-
         var caliCounties=topojson.feature(california, california.objects.Californ).features;
         console.log(california.objects);
         for (var i=0; i<csvData.length; i++){
@@ -60,36 +60,63 @@ function setMap(){
                 var attribute=keyArray[key];
                 var value=parseFloat(csvCounty[attribute]);
                 (jsonCounties[j].properties[attribute])=value;
+                console.log(value);
               }
             }
           }
         };
 
         var colorScale=makeColorScale(csvData);
-
         setEnumerationUnits(caliCounties, map, path, colorScale);
         setChart(csvData, caliCounties, colorScale);
-
-        // var counties=map.selectAll(".counties")
-        //     .data(caliCounties)
-        //     .enter()
-        //     .append("path")
-        //     .attr("class", function(d){
-        //           return "counties"+d.properties.geo_id;
-        //     })
-        //     .attr("d",path)
-        //     .style({
-        //         "fill": "purple",
-        //         "stroke":"white",
-        //         "stroke-width":".5"
-        //       });
     };
 };
 
+
+
+
 function makeColorScale(data){
 
-    var colorScale=d3.scale.quantile()//use quantile for scale generator
-         .range(objectColors[expressed]);//incorporate objectColors array to change depending on variable
+
+    // var color=d3.scale.threshold()
+    //   //.domain([80,90,95]) //for vaccine coverage
+    // //  .domain([2.82, 5.63, 13.45])//personal belief pbe1314
+    //   .domain([2.22,4.44,11.92])//personal belief pbe1516
+    //   //.range(['#ca0020','#f4a582','#92c5de','#0571b0'])//vaccine coverage--high=good
+    //   .range(['#0571b0','#92c5de','#f4a582','#ca0020'])//personal belief--low=good
+    // return color;
+
+    // var color=d3.scale.threshold()
+    //   .domain([])
+    //
+
+  // var colorClasses=objectColors[expressed];
+  //
+  // var colorScale=d3.scale.threshold()
+  //     .range(colorClasses);
+  //
+  // var domainArray=[];
+  // for (var i=0; i<data.length; i++){
+  //   var val=parseFloat(data[i][expressed]);
+  //       domainArray.push(val);
+  // };
+  //
+  // var clusters=ss.ckmeans(domainArray, 4);
+  // domainArray=clusters.map(function(d){
+  //   return d3.min(d);
+  // });
+  //
+  // domainArray.shift();
+  //
+  // colorScale.domain(domainArray);
+  //
+  // return colorScale;
+
+
+
+
+  var colorScale=d3.scale.quantile()//use quantile for scale generator
+         .range(['#ca0020','#f4a582','#92c5de','#0571b0']);//incorporate objectColors array to change depending on variable
 
 //creating equal interval classifcation
  var minmax = [
@@ -99,7 +126,13 @@ function makeColorScale(data){
    //assign two-value array as scale domain
    colorScale.domain(minmax);
    return colorScale;
+
+
+
 };
+
+
+
 
 //creation of choropleth map
 function choropleth(props, colorScale){
@@ -114,6 +147,9 @@ function choropleth(props, colorScale){
     }
   };
 
+
+
+
 function setEnumerationUnits(caliCounties, map, path, colorScale){
     //add countries to map
     var counties=map.selectAll(".counties")
@@ -122,13 +158,16 @@ function setEnumerationUnits(caliCounties, map, path, colorScale){
         .append("path")
         .attr("d",path)//assign d with attribute path
         .attr("class", function(d){
-          return "counties " + d.properties.coverage1314;
+          return "counties " + d.properties.measles10;
         })
         //color based on colorScale
         .style("fill", function(d){
             return choropleth(d.properties, colorScale);
         });
 };
+
+
+
 
 function setChart(csvData, caliCounties, colorScale){
 
@@ -163,7 +202,7 @@ function setChart(csvData, caliCounties, colorScale){
       })
       .attr("class", function(d){
         //give clas name to bars--was switching out values to see how each variable plotted out
-        return "bars " + d.geo_id;
+        return "bars " + d.coverage1314;
       })
       //width depending on number of elements, in my case 192-1
       .attr("width", chartInnerWidth/csvData.length - 1)
@@ -199,7 +238,7 @@ function setChart(csvData, caliCounties, colorScale){
         .attr("x", 250)
         .attr("y", 35)
         .attr("class","chartTitle")
-        .text("title")
+        .text([expressed])
 
     //create vertical axis generator
     var yAxis = d3.svg.axis()
