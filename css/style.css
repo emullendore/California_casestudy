@@ -4,6 +4,11 @@
   stroke-width: 1px;
 }
 
+.bubble {
+  fill-opacity: .5;
+  stroke: purple;
+  stroke-width: 5px;
+}
 .gratLines {
     fill: none;
     stroke: green;
@@ -13,7 +18,7 @@
 .chart {
     background-color: white;
     border: medium solid grey;
-    float: right;
+    float: center;
     margin: 80px 5px 0px 10px;
 }
 

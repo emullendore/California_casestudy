@@ -1,8 +1,8 @@
 (function(){
 
-keyArray=["coverage1314","pbe1314","coverage1516","pbe1516"];
-//keyArray=["measles10","measles11","measles12","measles13","measles14","measles15"]
-var expressed=keyArray[0];
+
+keyArray=["measles10","measles11","measles12","measles13","measles14","measles15"]
+var expressed=keyArray[1];
 var objectColors={
       coverage1314:['#ca0020','#f4a582','#92c5de','#0571b0'],
       pbe1314:[ '#ca0020','#f4a582','#92c5de','#0571b0'],
@@ -41,15 +41,14 @@ function setMap(){
         .projection(projection);
 
     var q=d3_queue.queue();
-       q.defer(d3.csv, "data/cali_coverage.csv")//csv data
-      //q.defer(d3.csv, "data/cali_measles.csv") //do I load two diff sets for two diff data
+      //  q.defer(d3.csv, "data/cali_coverage.csv")//csv data
+        q.defer(d3.csv, "data/cali_measles.csv") //do I load two diff sets for two diff data
       //representations?
         q.defer(d3.json, "data/Californ2.topojson")//spatial data
         q.await(callback);
 
     function callback(error, csvData, california){
         var caliCounties=topojson.feature(california, california.objects.Californ).features;
-        console.log(california.objects);
         for (var i=0; i<csvData.length; i++){
           var csvCounty=csvData[i];
           var csvCountyCode=csvCounty.geo_id;
@@ -60,14 +59,13 @@ function setMap(){
                 var attribute=keyArray[key];
                 var value=parseFloat(csvCounty[attribute]);
                 (jsonCounties[j].properties[attribute])=value;
-                console.log(value);
               }
             }
           }
         };
 
         var colorScale=makeColorScale(csvData);
-        setEnumerationUnits(caliCounties, map, path, colorScale);
+        setEnumerationUnits(caliCounties, california, map, path, colorScale);
         setChart(csvData, caliCounties, colorScale);
     };
 };
@@ -77,7 +75,7 @@ function setMap(){
 
 function makeColorScale(data){
 
-
+    //MANUALLY SETTING SCALE, US IF STATEMENTS?
     // var color=d3.scale.threshold()
     //   //.domain([80,90,95]) //for vaccine coverage
     // //  .domain([2.82, 5.63, 13.45])//personal belief pbe1314
@@ -86,10 +84,12 @@ function makeColorScale(data){
     //   .range(['#0571b0','#92c5de','#f4a582','#ca0020'])//personal belief--low=good
     // return color;
 
+
+
+    //JENKS CLASSIFICATION
     // var color=d3.scale.threshold()
     //   .domain([])
     //
-
   // var colorClasses=objectColors[expressed];
   //
   // var colorScale=d3.scale.threshold()
@@ -127,8 +127,6 @@ function makeColorScale(data){
    colorScale.domain(minmax);
    return colorScale;
 
-
-
 };
 
 
@@ -141,29 +139,42 @@ function choropleth(props, colorScale){
   if(isNaN(value)){
         return "purple";//no value
     } else if (value==0){
-        return "lightgrey";//for case of Political_Filtering with a score of 0
+        return "gray";//for case of Political_Filtering with a score of 0
     } else{
         return colorScale(value);
     }
   };
 
+function setEnumerationUnits(caliCounties, california, map, path, colorScale){
+  var centroidCounties=topojson.feature(california, california.objects.Californ).features;
 
-
-
-function setEnumerationUnits(caliCounties, map, path, colorScale){
     //add countries to map
     var counties=map.selectAll(".counties")
         .data(caliCounties)
         .enter()
         .append("path")
-        .attr("d",path)//assign d with attribute path
+        .attr("d",path)
+
+            //assign d with attribute path
         .attr("class", function(d){
+
           return "counties " + d.properties.measles10;
         })
         //color based on colorScale
-        .style("fill", function(d){
-            return choropleth(d.properties, colorScale);
-        });
+        .style("fill", "lightgrey"// function(d){
+          //  return choropleth(d.properties, colorScale);
+      //  })
+        )
+        .append("g")
+            .attr("class","bubble")
+          .selectAll("circle")
+            .data(centroidCounties)
+            .enter().append("circle")
+        .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; console.log(path.centroid(d)) ;})
+        .attr("r", 10)
+        console.log(path.centroid(centroidCounties));
+
+
 };
 
 
@@ -190,7 +201,7 @@ function setChart(csvData, caliCounties, colorScale){
               .domain([d3.max(csvData,function(d){ return parseFloat(d[expressed])})*1.02, 0])
               //output this between 0 and chartInnerHeight
               .range([0, chartInnerHeight]);
-//var data2=newData(worldCountries, csvData)
+
 //bars element added
   var bars=chart.selectAll(".bars")
       .data(csvData)
